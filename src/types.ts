@@ -27,13 +27,7 @@ export interface TextOpts {
 
 export interface IRCMessage {
 	prefix?: string;
-	server?: string;
-	nick?: string;
-	user?: string;
-	host?: string;
 	command?: string;
-	rawCommand?: string;
-	commandType?: string;
 	params?: Array<string>;
 	ignore: boolean;
 }

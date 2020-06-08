@@ -1,5 +1,5 @@
 import { IRCMessage } from './types';
-import { codes } from './codes';
+import { commands } from './commands';
 
 /**
  * According to IRC message specifications: https://tools.ietf.org/html/rfc1459#section-2.3.1
@@ -29,8 +29,10 @@ export const parseData = (line: string): IRCMessage => {
 
 	match = line.match(commandRegex);
 	if (match) {
-		const command = match[0].slice(message.prefix.length + 2, match[0].length);
-		message.command = command;
+		const command = match[0]
+			.slice(message.prefix.length + 2, match[0].length)
+			.toLowerCase();
+		message.command = isNaN(command) ? command : commands.get(command);
 	} else {
 		message.ignore = true;
 		return message;

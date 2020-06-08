@@ -2,6 +2,7 @@ import { ClientOpts, ConnectionOpts, TextOpts, IRCMessage } from './types';
 import { Socket, createConnection } from 'net';
 import { Cli } from './cli';
 import { parseData } from './parseData';
+import { commands } from './commands';
 
 export class Client {
 	opts: ClientOpts;
@@ -42,7 +43,8 @@ export class Client {
 
 		for (const data of parsedData) {
 			if (data.ignore) continue;
-			console.log(data);
+
+			console.log(data.command);
 		}
 	}
 
