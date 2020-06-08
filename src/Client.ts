@@ -1,6 +1,7 @@
-import { ClientOpts, ConnectionOpts, TextOpts } from './types';
+import { ClientOpts, ConnectionOpts, TextOpts, IRCMessage } from './types';
 import { Socket, createConnection } from 'net';
 import { Cli } from './cli';
+import { parseData } from './parseData';
 
 export class Client {
 	opts: ClientOpts;
@@ -12,7 +13,6 @@ export class Client {
 		this.opts = opts;
 		this.socket;
 		this.connected = false;
-		this.cli = opts.cli;
 	}
 
 	connect(opts: ConnectionOpts, cb: Function): void {
@@ -22,14 +22,6 @@ export class Client {
 			}
 
 			this.socket.on('connect', () => {
-				const opts: TextOpts = {
-					x: this.cli.getWidth() / 2,
-					y: this.cli.getHeight() / 2,
-					text: 'Connected',
-					centered: true,
-				};
-
-				this.cli.line(opts);
 				console.log('CONNECTED!!');
 			});
 
@@ -42,34 +34,20 @@ export class Client {
 		const str = buf.toString();
 		const lines = str.split('\r\n');
 
+		const parsedData: Array<IRCMessage> = [];
 		for (const line of lines) {
-			// const indexOfNick = line.indexOf(this.opts.nick);
-			// if (indexOfNick === -1) return;
+			const parsedLine: IRCMessage = parseData(line);
+			parsedData.push(parsedLine);
 		}
 
-		const opts: TextOpts = {
-			x: 0,
-			y: 0,
-			text: str,
-			centered: false,
-		};
-		this.cli.appendLine(opts);
-		// console.log(str);
+		for (const data of parsedData) {
+			if (data.ignore) continue;
+			console.log(data);
+		}
 	}
 
 	sendCommand(command: string, args?: Array<string>): void {
 		if (!args) {
-			const opts: TextOpts = {
-				x: 0,
-				y: 0,
-				text: `Sending Command: ${command}`,
-				centered: false,
-			};
-
-			this.cli.line(opts);
-
-			// console.log(`Sending Command: ${command}`);
-
 			this.socket.write(`${command}\r\n`);
 			return;
 		}
@@ -81,16 +59,6 @@ export class Client {
 		}
 		commands.push('\r\n');
 		commandString = commands.join(' ');
-
-		const opts: TextOpts = {
-			x: 0,
-			y: 0,
-			text: `Sending Command: ${commandString}`,
-			centered: false,
-		};
-
-		this.cli.appendLine(opts);
-		// console.log(`Sending Command: ${commandString}`);
 
 		this.socket.write(commandString);
 	}

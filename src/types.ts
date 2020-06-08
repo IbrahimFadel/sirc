@@ -1,11 +1,11 @@
-import { Cli } from './cli';
+// import { Cli } from './cli';
 
 export interface ClientOpts {
 	nick: string;
 	realname: string;
 	hostname: string;
 	servername: string;
-	cli: Cli;
+	// cli: Cli;
 }
 
 export interface ConnectionOpts {
@@ -23,4 +23,17 @@ export interface TextOpts {
 	centered: boolean;
 	x: number;
 	y: number;
+}
+
+export interface IRCMessage {
+	prefix?: string;
+	server?: string;
+	nick?: string;
+	user?: string;
+	host?: string;
+	command?: string;
+	rawCommand?: string;
+	commandType?: string;
+	params?: Array<string>;
+	ignore: boolean;
 }

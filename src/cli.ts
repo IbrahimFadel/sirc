@@ -1,10 +1,12 @@
 import { CliOpts, TextOpts } from './types';
-import { screen, box, Widgets } from 'blessed';
+import { screen, box, Widgets, textarea, form } from 'blessed';
 
 export class Cli {
 	private opts: CliOpts;
 	private screen: Widgets.Screen;
 	private mainBox: Widgets.BoxElement;
+	private inputBox: Widgets.TextareaElement;
+	private inputForm: Widgets.FormElement<any>;
 
 	private width: number;
 	private height: number;
@@ -25,10 +27,10 @@ export class Cli {
 		this.setEventListeners();
 
 		this.mainBox = box({
-			top: 'center',
-			left: 'center',
+			top: 0,
+			left: 0,
 			width: '100%',
-			height: '100%',
+			height: '95%',
 			tags: true,
 			border: {
 				type: 'line',
@@ -45,7 +47,61 @@ export class Cli {
 			scrollable: true,
 		});
 
+		this.inputBox = textarea({
+			parent: this.screen,
+			bottom: 0,
+			left: 0,
+			height: '5%',
+			width: '100%',
+			inputOnFocus: true,
+			// keys: true,
+			mouse: true,
+			style: {
+				fg: 'white',
+				bg: 'blue',
+				border: {
+					fg: '#f0f0f0',
+				},
+			},
+		});
+
+		this.inputBox.key(['enter'], () => {
+			this.inputBox.submit();
+		});
+
+		this.inputBox.on('submit', e => {
+			console.log('submit', e);
+		});
+
+		// this.inputForm = form({
+
+		// });
+
+		// this.inputBox = textbox({
+		// 	bottom: 0,
+		// 	left: 0,
+		// 	height: '5%',
+		// 	width: '99%',
+		// 	keys: true,
+		// 	mouse: true,
+		// 	inputOnFocus: true,
+		// 	style: {
+		// 		fg: 'white',
+		// 		bg: 'blue', // Blue background so you see this is different from body,
+		// 		border: {
+		// 			fg: '#f0f0f0',
+		// 		},
+		// 	},
+		// });
+
+		// this.inputBox.on('action', e => {
+		// console.log(e);
+		// });
+
+		this.screen.append(this.inputBox);
 		this.screen.append(this.mainBox);
+
+		this.mainBox.focus();
 
 		this.screen.render();
 	}
@@ -85,7 +141,15 @@ export class Cli {
 			xPositionedText += ' ';
 		}
 		xPositionedText += text;
-		this.mainBox.setLine(row + 1, xPositionedText);
+		// console.log(row, xPositionedText);
+		try {
+			// this.mainBox.pushLine(xPositionedText);
+			// this.mainBox.insertLine(row, xPositionedText);
+		} catch {
+			// this.mainBox.setLine(row, xPositionedText);
+		}
+		// this.mainBox.insertLine(row, xPositionedText);
+		// this.mainBox.setLine(row, xPositionedText);
 
 		// console.log('LINE: ', opts.text);
 
