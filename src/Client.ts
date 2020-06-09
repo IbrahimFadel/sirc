@@ -9,11 +9,13 @@ export class Client {
 	socket: Socket;
 	connected: boolean;
 	cli: Cli;
+	motd: string;
 
 	constructor(opts: ClientOpts) {
 		this.opts = opts;
 		this.socket;
 		this.connected = false;
+		this.motd = '';
 	}
 
 	connect(opts: ConnectionOpts, cb: Function): void {
@@ -44,8 +46,36 @@ export class Client {
 		for (const data of parsedData) {
 			if (data.ignore) continue;
 
-			console.log(data.command);
+			this.handleMessage(data);
 		}
+	}
+
+	handleMessage(data: IRCMessage): void {
+		// console.log(data.command);
+		switch (data.command) {
+			case 'rpl_welcome':
+				this.print_raw(data.params[1].slice(1, data.params[1].length));
+				break;
+			case 'rpl_motdstart':
+				this.motd = data.params[1] + '\n';
+				break;
+			case 'rpl_motd':
+				this.motd += data.params[1] + '\n';
+				break;
+			case 'rpl_endofmotd':
+				this.print_raw(this.motd);
+				break;
+			case 'rpl_namreply':
+				// console.log(data.params);
+				this.print_raw(`${data.params[2]} -- Names: ${data.params[3]}`);
+				break;
+			case 'rpl_endofnames':
+				break;
+		}
+	}
+
+	print_raw(text: string): void {
+		console.log(text);
 	}
 
 	sendCommand(command: string, args?: Array<string>): void {

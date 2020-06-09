@@ -29,10 +29,10 @@ export const parseData = (line: string): IRCMessage => {
 
 	match = line.match(commandRegex);
 	if (match) {
-		const command = match[0]
-			.slice(message.prefix.length + 2, match[0].length)
-			.toLowerCase();
-		message.command = isNaN(command) ? command : commands.get(command);
+		const command = match[0].slice(message.prefix.length + 2, match[0].length);
+		message.command = isNaN(command)
+			? command.toLowerCase()
+			: commands.get(command).toLowerCase();
 	} else {
 		message.ignore = true;
 		return message;

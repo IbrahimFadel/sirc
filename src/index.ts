@@ -31,6 +31,10 @@ const run = (): void => {
 
 	client.connect(connectionOpts, () => {
 		client.nick('dwibber');
+
+		client.sendCommand('JOIN', ['#guitar']);
+
+		client.sendCommand('NAMES');
 	});
 
 	// client.connect(connectionOpts, () => {
