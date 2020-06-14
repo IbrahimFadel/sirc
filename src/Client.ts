@@ -1,7 +1,8 @@
 import { ClientOpts, ConnectionOpts, IRCMessage, TypingState } from "./types";
 import { Socket, createConnection } from "net";
 import { parseData } from "./parseData";
-import { emitKeypressEvents, Key } from "readline";
+import { emitKeypressEvents, Key, clearLine, cursorTo } from "readline";
+import { join, msg } from "./sircCommands";
 
 export class Client {
   opts: ClientOpts;
@@ -23,10 +24,10 @@ export class Client {
 
     emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
-    process.stdin.on("keypress", (str, key) => this.handleKeyPress(str, key));
+    process.stdin.on("keypress", (str, key) => this.handleKeyPress(key));
   }
 
-  handleKeyPress(str: string, key: Key) {
+  handleKeyPress(key: Key) {
     const { sequence } = key;
 
     if (this.quitSequences.includes(sequence)) {
@@ -35,11 +36,22 @@ export class Client {
 
     if (this.typingState == TypingState.command) {
       if (sequence === "\r") {
+        clearLine(process.stdout, 0);
+        cursorTo(process.stdout, 0, process.stdout.rows - 1);
         this.sircCommand(this.command);
-        // this.socket.write(this.command + "\r\n");
-        process.stdout.clearLine(0);
-        process.stdout.cursorTo(0, process.stdout.rows - 1);
         this.command = "";
+        this.typingState = TypingState.normal;
+      } else if (sequence === "\x7F") {
+        if (this.command.length !== 0) {
+          this.command = this.command.substring(0, this.command.length - 1);
+          process.stdout.clearLine(0);
+          process.stdout.cursorTo(0, process.stdout.rows - 1);
+          process.stdout.write("/" + this.command);
+        } else {
+          this.typingState = TypingState.normal;
+          process.stdout.clearLine(0);
+          process.stdout.cursorTo(0, process.stdout.rows - 1);
+        }
       } else {
         this.command += sequence;
         process.stdout.clearLine(0);
@@ -56,12 +68,16 @@ export class Client {
     }
   }
 
-  sircCommand(command: string) {
-    const commandArray: Array<string> = command.split(" ");
+  sircCommand(commandString: string) {
+    const commandArray: Array<string> = commandString.split(" ");
+    const command: string = commandArray[0];
 
-    switch (commandArray[0].toLowerCase()) {
+    switch (command.toLowerCase()) {
       case "join":
-        this.sendCommand("join", commandArray.slice(1, commandArray.length));
+        join(this, commandString);
+        break;
+      case "msg":
+        msg(this, commandString);
         break;
     }
   }
@@ -114,10 +130,12 @@ export class Client {
         this.print_raw(this.motd);
         break;
       case "rpl_namreply":
-        // console.log(data.params);
         this.print_raw(`${data.params[2]} -- Names: ${data.params[3]}`);
         break;
       case "rpl_endofnames":
+        break;
+      case "err_nosuchnick":
+        this.print_raw("No such nickname");
         break;
     }
   }
