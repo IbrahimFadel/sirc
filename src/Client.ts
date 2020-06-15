@@ -2,7 +2,7 @@ import { ClientOpts, ConnectionOpts, IRCMessage, TypingState } from './types';
 import { Socket, createConnection } from 'net';
 import { parseData } from './parseData';
 import { emitKeypressEvents, Key, clearLine, cursorTo } from 'readline';
-import { join, msg, prev, next } from './sircCommands';
+import { join, msg, prev, next, welcome, receivedMsg } from './sircCommands';
 import { bgGray, black, bgWhite } from 'chalk';
 
 export class Client {
@@ -112,6 +112,7 @@ export class Client {
 
 	writeTabs() {
 		cursorTo(process.stdout, 0, 0);
+		clearLine(process.stdout, 0);
 		for (let i = 0; i < this.tabs.length; i++) {
 			const tab = this.tabs[i];
 			const bg = i === this.tab ? bgWhite : bgGray;
@@ -141,7 +142,8 @@ export class Client {
 		// console.log(data.command);
 		switch (data.command) {
 			case 'rpl_welcome':
-				this.print_raw(data.params[1].slice(1, data.params[1].length));
+				welcome(this, data.params[1].slice(1, data.params[1].length));
+				// this.print_raw(data.params[1].slice(1, data.params[1].length));
 				break;
 			case 'rpl_motdstart':
 				this.motd = data.params[1] + '\n';
@@ -159,6 +161,9 @@ export class Client {
 				break;
 			case 'err_nosuchnick':
 				this.print_raw('No such nickname');
+				break;
+			case 'privmsg':
+				receivedMsg(this, data);
 				break;
 		}
 	}
